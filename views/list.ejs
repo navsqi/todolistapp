@@ -9,15 +9,18 @@
 
 
         <%  todo.forEach(function(result){ %>
-        <div class="item">
-            <input type="checkbox">
-            <p><%= result.name %></p>
-        </div>
+        <form action="/delete" method="POST">
+            <div class="item">
+                <input type="checkbox" name="item" value="<%= result._id %>" onchange="this.form.submit()">
+                <input type="hidden" name="list" value="<%= day %>">
+                <p><%= result.name %></p>
+            </div>
+        </form>
 
         <%  }); %>
         <form class="item" action="/" method="POST">
             <input type="text" name="todo" placeholder="To Do List" autofocus autocomplete="off">
-            <button type="submit" name="list" value="<%= list %>">+</button>
+            <button type="submit" name="list" value="<%= day %>">+</button>
         </form>
     </div>
 
