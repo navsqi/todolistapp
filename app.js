@@ -139,7 +139,7 @@ app.post("/", function (req, res) {
 
 app.post("/delete", function(req,res){
 
-    let list = _.lowerCase(req.body.list);
+    let list = req.body.list;
     let id = req.body.item;
 
     if(list === day){
@@ -152,9 +152,9 @@ app.post("/delete", function(req,res){
             }
         });
     }else {
-        List.findOneAndUpdate( {name: list}, {$pull: {items: {_id: id}}}, function(err, result){
+        List.findOneAndUpdate( {name: _.lowerCase(list)}, {$pull: {items: {_id: id}}}, function(err, result){
             if(!err){
-                res.redirect("/"+list);
+                res.redirect("/"+_.lowerCase(list));
             }
         } )
     }
