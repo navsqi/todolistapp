@@ -1,5 +1,5 @@
 //jshint esversion:6
-
+require('dotenv').config()
 const express = require("express");
 const bodyParser = require("body-parser");
 const moment = require('moment');
@@ -15,7 +15,7 @@ app.use(bodyParser.urlencoded({
 app.set("view engine", "ejs");
 app.use(express.static("public"));
 
-mongoose.connect("mongodb+srv://admin-nauval:Kocak123s@cluster0-we0x9.mongodb.net/todolistDB", {useNewUrlParser: true, useUnifiedTopology: true, useFindAndModify: false});
+mongoose.connect(process.env.DB_HOST, {useNewUrlParser: true, useUnifiedTopology: true, useFindAndModify: false});
 db = mongoose.connection;
 
 const itemSchema = new mongoose.Schema({
@@ -42,22 +42,12 @@ const listSchema = {
 
 const List = mongoose.model("List", listSchema);
 
-// Item.insertMany(defaultItems, function(err){
-//     if(err){
-//         console.log(err);
-//     }else{
-//         db.close();
-//         console.log("data has been inserted successfully");
-//     }
-// });
-let day = moment().locale("id-ID").format("dddd, D MMMM YYYY");
+let day = moment().locale("en-ID").format("dddd, D MMMM YYYY") //format Indonesia => id-ID;
 
 app.get('/favicon.ico', (req, res) => res.sendStatus(204));
 
 app.get("/", function (req, res) {
-
-    
-
+    // Cek item kosong atau tidak
     Item.find(function(err,result){
         if(result.length === 0){
             Item.insertMany(defaultItems, function(err){
@@ -71,14 +61,13 @@ app.get("/", function (req, res) {
 
             res.redirect("/");
         }else {
-
+                //Jika tidak akan menampilkan list
                 todos = result;
                 res.render("list", {
                     day: day,
                     list: "todo",
                     todo: todos
-                });
-            
+                });   
         }
         
     });
@@ -86,9 +75,10 @@ app.get("/", function (req, res) {
 
 app.get("/:customListName", function(req,res){
     let customListName = _.lowerCase(req.params.customListName);
-
+    // mencari custom list name
     List.findOne({name: customListName}, function(err, result){
         if(!err){
+            // jika ada menampilkan list
             if(result){
                 res.render("list", {
                     day: helper.toTitleCase(customListName),
@@ -97,6 +87,7 @@ app.get("/:customListName", function(req,res){
                     helper: helper
                 });
             }else {
+                // jika tidak ada  membuat list baru
                 let list = new List({
                     name: customListName,
                     items: defaultItems
@@ -105,17 +96,11 @@ app.get("/:customListName", function(req,res){
                 if(list.save()){
                     res.redirect("/"+customListName);
                 }
-
-
             }
         }
     });
 
     
-});
-
-app.get("/about", function (req, res) {
-    res.render("about");
 });
 
 app.post("/", function (req, res) {
@@ -124,10 +109,12 @@ app.post("/", function (req, res) {
     let item = new Item({
         name: todo
     });
+    // jika list home route
     if (list === day) {
         item.save();
-        res.redirect("/");
+        res.redirect("/"); 
     } else {
+        // jika custom list name
         List.findOne({name: _.lowerCase(req.body.list)}, function(err,result){
             result.items.push(item);
             result.save();
@@ -142,6 +129,7 @@ app.post("/delete", function(req,res){
     let list = req.body.list;
     let id = req.body.item;
 
+    // jika list home route
     if(list === day){
         Item.findByIdAndRemove(req.body.item, function(error){
             if(error){
@@ -152,6 +140,7 @@ app.post("/delete", function(req,res){
             }
         });
     }else {
+        // jika bukan home route
         List.findOneAndUpdate( {name: _.lowerCase(list)}, {$pull: {items: {_id: id}}}, function(err, result){
             if(!err){
                 res.redirect("/"+_.lowerCase(list));
